@@ -16,6 +16,13 @@ export class AppComponent {
   title = 'angular-editor-fabric-js';
 
   @ViewChild('canvas', { static: false }) canvas?: FabricjsEditorComponent;
+  
+  selectedObject: fabric.Object|undefined;
+
+  onSelectionEvent(event: fabric.Object|undefined) {
+    this.selectedObject = event
+  }
+ 
 
   public rasterize() {
     this.canvas?.rasterize();
@@ -146,7 +153,7 @@ export class AppComponent {
   }
 
   public drawMode() {
-    this.canvas?.drawingMode();
+    this.canvas?.toggleDrawingMode();
   }
 
   public changeFigureColor(color:any){

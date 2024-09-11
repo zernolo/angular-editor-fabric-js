@@ -64,12 +64,6 @@
                 <input type="checkbox" class="custom-control-input" checked id="customSwitch1" (click)="drawMode()">
                 <label class="custom-control-label" for="customSwitch1">Enable / Disable</label>
               </div>
-              <!-- <span class="input-group-text">
-
-                             <button id="add-text" data-toggle="tooltip" data-placement="bottom" title="Drawing Mode" class="btn btn-primary" (click)="drawMode()">
-                                <i class="fa fa-plus" aria-hidden="true"></i>
-                            </button>
-                        </span> -->
             </div>
           </div>
         </div>
@@ -144,7 +138,7 @@
       </div>
     </div>
     <div class="col-xl-6">
-      <angular-editor-fabric-js #canvas></angular-editor-fabric-js>
+      <angular-editor-fabric-js (selectionEvent)="onSelectionEvent($event)" #canvas></angular-editor-fabric-js>
     </div>
     <div class="col-xl-3">
       <div class="card">
@@ -156,27 +150,27 @@
               <i class="fa fa-trash" aria-hidden="true"></i>
             </button>
             <button data-toggle="tooltip" data-placement="bottom" title="Send to back" type="button"
-              class="btn btn-outline-primary" [disabled]="!canvas.selected" (click)="sendToBack();">
+              class="btn btn-outline-primary" [disabled]="!selectedObject" (click)="sendToBack();">
               <i class="fa fa-level-down" aria-hidden="true"></i>
             </button>
             <button data-toggle="tooltip" data-placement="bottom" title="Send to front" type="button"
-              class="btn btn-outline-primary" [disabled]="!canvas.selected" (click)="bringToFront();">
+              class="btn btn-outline-primary" [disabled]="!selectedObject" (click)="bringToFront();">
               <i class="fa fa-level-up" aria-hidden="true"></i>
             </button>
             <button data-toggle="tooltip" data-placement="bottom" title="Clone" type="button"
-              class="btn btn-outline-primary" [disabled]="!canvas.selected || canvas.selected.type == 'group'"
+              class="btn btn-outline-primary" [disabled]="!selectedObject || selectedObject.type==='group'"
               (click)="clone();">
               <i class="fa fa-clone" aria-hidden="true"></i>
             </button>
             <button data-toggle="tooltip" data-placement="bottom" title="Unselect" type="button"
-              class="btn btn-outline-primary" [disabled]="!canvas.selected" (click)="cleanSelect()">
+              class="btn btn-outline-primary" [disabled]="!selectedObject" (click)="cleanSelect()">
               <i class="fa fa-remove" aria-hidden="true"></i>
             </button>
           </div>
         </div>
       </div>
       <br />
-      <div class="card" *ngIf="!canvas.selected">
+      <div class="card" *ngIf="!selectedObject">
         <div class="card-header">Canvas</div>
         <div class="card-body">
           <div class="custom-item" *ngIf="!canvas.props.canvasImage">
@@ -206,15 +200,14 @@
       <div class="card">
         <div class="card-header">Custom</div>
         <div class="card-body">
-          <div class="custom-item" *ngIf="canvas.selected  && canvas.selected.type == 'group'">Group Selected</div>
-          <div class="custom-item" *ngIf="!canvas.selected">No items selected</div>
-          <div class="custom-item" *ngIf="canvas.selected && canvas.selected.type != 'group'">
+          <div class="custom-item" *ngIf="!selectedObject">No items selected</div>
+          <div class="custom-item" *ngIf="canvas.selected">
             <div class="custom-item-title">ID</div>
             <div class="custom-item-body">
               <input type="text" class="form-control" [(ngModel)]="canvas.props.id" (keyup)="setId()">
             </div>
           </div>
-          <div class="custom-item" *ngIf="canvas.selected && canvas.selected.type != 'group'">
+          <div class="custom-item" *ngIf="canvas.selected">
             <div class="custom-item-title">Opacity</div>
             <div class="custom-item-body">
               <input type="range" [(ngModel)]="canvas.props.opacity" (change)="setOpacity()">{{canvas.props.opacity}}

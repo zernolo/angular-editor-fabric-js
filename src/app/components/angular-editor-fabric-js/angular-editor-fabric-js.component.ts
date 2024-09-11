@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Output, ViewChild } from '@angular/core';
 import { fabric } from 'fabric';
 
 @Component({
@@ -37,81 +37,108 @@ export class FabricjsEditorComponent implements AfterViewInit {
   };
 
   public json: any;
-  private globalEditor = false;
   public textEditor = false;
-  private imageEditor = false;
   public figureEditor = false;
-  public selected: any;
+
+  public selected: fabric.Object | undefined
+
+  @Output()
+  public selectionEvent : EventEmitter<fabric.Object | undefined> = new EventEmitter()
 
   constructor() { }
 
   ngAfterViewInit(): void {
 
-    // setup front side canvas
     this.canvas = new fabric.Canvas(this.htmlCanvas?.nativeElement, {
       hoverCursor: 'pointer',
       selection: true,
       selectionBorderColor: 'blue',
-      isDrawingMode: true
+      isDrawingMode: false
     });
 
-    this.canvas.on('object:moving', (e: any) => { })
-    this.canvas.on('object:modified', (e: any) => { })
+    this.canvas.on('object:moving', (e: fabric.IEvent) => { })
 
-    this.canvas.on(
-      'object:selected', (e: any) => {
-        const selectedObject = e.target;
-        this.selected = selectedObject;
-        if (selectedObject) {
-          selectedObject.hasRotatingPoint = true;
-          selectedObject.transparentCorners = false;
-          selectedObject.cornerColor = 'rgba(255, 87, 34, 0.7)';
-        }
-        this.resetPanels();
+    this.canvas.on('object:modified', (e: fabric.IEvent) => { })
 
-        if (selectedObject?.type !== 'group' && selectedObject) {
+    this.canvas.on('object:selected', (e: fabric.IEvent) => {
+      if (e.selected)
+        this.handleObjectSelectionEvent(e.selected);
+    })
 
-          this.getId();
-          this.getOpacity();
+    this.canvas.on('object:added', (e: fabric.IEvent) => {
+      console.log("object:added", e);
+      if (e.target)
+        this.handleObjectSelectionEvent([e.target]);
+    })
 
-          switch (selectedObject.type) {
-            case 'rect':
-            case 'circle':
-            case 'triangle':
-              this.figureEditor = true;
-              this.getFill();
-              break;
-            case 'i-text':
-              this.textEditor = true;
-              this.getLineHeight();
-              this.getCharSpacing();
-              this.getBold();
-              this.getFill();
-              this.getTextDecoration();
-              this.getTextAlign();
-              this.getFontFamily();
-              break;
-            case 'image':
-              break;
-          }
-        }
-      })
-    this.canvas.on('selection:cleared', (e: any) => {
-      this.selected = null;
+    this.canvas.on('selection:created', (e: fabric.IEvent) => {
+      console.log("selection:created", e);
+      if (e.target)
+        this.handleObjectSelectionEvent([e.target]);
+    })
+
+    this.canvas.on('selection:updated', (e: fabric.IEvent) => {
+      console.log("selection:updated", e);
+      if (e.selected)
+        this.handleObjectSelectionEvent(e.selected);
+    })
+
+    this.canvas.on('selection:cleared', (e: fabric.IEvent) => {
+      this.selected = undefined;
       this.resetPanels();
-    }
-    );
+      this.selectionEvent.emit(this.selected)
+    });
 
     this.canvas.setWidth(this.size.width);
     this.canvas.setHeight(this.size.height);
 
     // get references to the html canvas element & its context
-    this.canvas.on('mouse:down', (e: any) => {
+    this.canvas.on('mouse:down', (e: fabric.IEvent) => {
       const canvasElement: any = document.getElementById('canvas');
     });
 
   }
 
+
+  private handleObjectSelectionEvent(e: fabric.Object[]) {
+    if (Array.isArray(e) && e.length > 0) {
+      this.selected = e[0];
+    } else {
+      this.selected = undefined
+    }
+    this.resetPanels();
+    const selectedObject = this.selected;
+    if (selectedObject) {
+      selectedObject.hasRotatingPoint = true;
+      selectedObject.transparentCorners = false;
+      selectedObject.cornerColor = 'rgba(255, 87, 34, 0.7)';
+    }
+    if (selectedObject?.type !== 'group' && selectedObject) {
+      //this.getId();
+      //this.getOpacity();
+      switch (selectedObject.type) {
+        case 'rect':
+        case 'circle':
+        case 'triangle':
+          this.figureEditor = true;
+          this.getFill();
+          break;
+        case 'i-text':
+          this.textEditor = true;
+          this.getLineHeight();
+          this.getCharSpacing();
+          this.getBold();
+          this.getFill();
+          this.getTextDecoration();
+          this.getTextAlign();
+          this.getFontFamily();
+          break;
+        case 'image':
+          break;
+      }
+    }
+    this.selectionEvent.emit(this.selected)
+  }
 
   /*------------------------Block elements------------------------*/
 
@@ -651,11 +678,10 @@ export class FabricjsEditorComponent implements AfterViewInit {
 
   resetPanels() {
     this.textEditor = false;
-    this.imageEditor = false;
     this.figureEditor = false;
   }
 
-  drawingMode() {
+  toggleDrawingMode() {
     if (this.canvas) {
       this.canvas.isDrawingMode = !this.canvas.isDrawingMode;
     }
