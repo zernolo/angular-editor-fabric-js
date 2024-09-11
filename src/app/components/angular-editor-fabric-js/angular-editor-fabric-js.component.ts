@@ -1,16 +1,19 @@
-import { Component, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { fabric } from 'fabric';
 
 @Component({
+  standalone: true,
+  imports: [CommonModule],
   selector: 'angular-editor-fabric-js',
   templateUrl: './angular-editor-fabric-js.component.html',
   styleUrls: ['./angular-editor-fabric-js.component.css'],
 })
 export class FabricjsEditorComponent implements AfterViewInit {
-  @ViewChild('htmlCanvas') htmlCanvas: ElementRef;
+  @ViewChild('htmlCanvas') htmlCanvas?: ElementRef;
 
-  private canvas: fabric.Canvas;
-  public props = {
+  private canvas?: fabric.Canvas;
+  public props: any = {
     canvasFill: '#ffffff',
     canvasImage: '',
     id: null,
@@ -26,7 +29,7 @@ export class FabricjsEditorComponent implements AfterViewInit {
     TextDecoration: ''
   };
 
-  public textString: string;
+  public textString?: string;
   public url: string | ArrayBuffer = '';
   public size: any = {
     width: 500,
@@ -45,27 +48,28 @@ export class FabricjsEditorComponent implements AfterViewInit {
   ngAfterViewInit(): void {
 
     // setup front side canvas
-    this.canvas = new fabric.Canvas(this.htmlCanvas.nativeElement, {
+    this.canvas = new fabric.Canvas(this.htmlCanvas?.nativeElement, {
       hoverCursor: 'pointer',
       selection: true,
       selectionBorderColor: 'blue',
       isDrawingMode: true
     });
 
-    this.canvas.on({
-      'object:moving': (e) => { },
-      'object:modified': (e) => { },
-      'object:selected': (e) => {
+    this.canvas.on('object:moving', (e: any) => { })
+    this.canvas.on('object:modified', (e: any) => { })
 
+    this.canvas.on(
+      'object:selected', (e: any) => {
         const selectedObject = e.target;
         this.selected = selectedObject;
-        selectedObject.hasRotatingPoint = true;
-        selectedObject.transparentCorners = false;
-        selectedObject.cornerColor = 'rgba(255, 87, 34, 0.7)';
-
+        if (selectedObject) {
+          selectedObject.hasRotatingPoint = true;
+          selectedObject.transparentCorners = false;
+          selectedObject.cornerColor = 'rgba(255, 87, 34, 0.7)';
+        }
         this.resetPanels();
 
-        if (selectedObject.type !== 'group' && selectedObject) {
+        if (selectedObject?.type !== 'group' && selectedObject) {
 
           this.getId();
           this.getOpacity();
@@ -91,18 +95,18 @@ export class FabricjsEditorComponent implements AfterViewInit {
               break;
           }
         }
-      },
-      'selection:cleared': (e) => {
-        this.selected = null;
-        this.resetPanels();
-      }
-    });
+      })
+    this.canvas.on('selection:cleared', (e: any) => {
+      this.selected = null;
+      this.resetPanels();
+    }
+    );
 
     this.canvas.setWidth(this.size.width);
     this.canvas.setHeight(this.size.height);
 
     // get references to the html canvas element & its context
-    this.canvas.on('mouse:down', (e) => {
+    this.canvas.on('mouse:down', (e: any) => {
       const canvasElement: any = document.getElementById('canvas');
     });
 
@@ -114,14 +118,14 @@ export class FabricjsEditorComponent implements AfterViewInit {
   // Block "Size"
 
   changeSize() {
-    this.canvas.setWidth(this.size.width);
-    this.canvas.setHeight(this.size.height);
+    this.canvas?.setWidth(this.size.width);
+    this.canvas?.setHeight(this.size.height);
   }
 
   // Block "Add text"
 
   addText() {
-    if (this.textString) {
+    if (this.canvas && this.textString) {
       const text = new fabric.IText(this.textString, {
         left: 10,
         top: 10,
@@ -145,7 +149,7 @@ export class FabricjsEditorComponent implements AfterViewInit {
 
   getImgPolaroid(event: any) {
     const el = event.target;
-    fabric.loadSVGFromURL(el.src, (objects, options) => {
+    fabric.loadSVGFromURL(el.src, (objects: any, options: any) => {
       const image = fabric.util.groupSVGElements(objects, options);
       image.set({
         left: 10,
@@ -156,16 +160,16 @@ export class FabricjsEditorComponent implements AfterViewInit {
         hasRotatingPoint: true,
       });
       this.extend(image, this.randomId());
-      this.canvas.add(image);
+      this.canvas?.add(image);
       this.selectItemAfterAdded(image);
     });
   }
 
   // Block "Upload Image"
 
-  addImageOnCanvas(url) {
+  addImageOnCanvas(url: string) {
     if (url) {
-      fabric.Image.fromURL(url, (image) => {
+      fabric.Image.fromURL(url, (image: any) => {
         image.set({
           left: 10,
           top: 10,
@@ -177,29 +181,30 @@ export class FabricjsEditorComponent implements AfterViewInit {
         image.scaleToWidth(200);
         image.scaleToHeight(200);
         this.extend(image, this.randomId());
-        this.canvas.add(image);
+        this.canvas?.add(image);
         this.selectItemAfterAdded(image);
       });
     }
   }
 
-  readUrl(event) {
+  readUrl(event: any) {
     if (event.target.files && event.target.files[0]) {
       const reader = new FileReader();
       reader.onload = (readerEvent) => {
-        this.url = readerEvent.target.result;
+        if (readerEvent.target?.result)
+          this.url = readerEvent.target.result;
       };
       reader.readAsDataURL(event.target.files[0]);
     }
   }
 
-  removeWhite(url) {
+  removeWhite(url: string) {
     this.url = '';
   }
 
   // Block "Add figure"
 
-  addFigure(figure) {
+  addFigure(figure: string) {
     let add: any;
     switch (figure) {
       case 'rectangle':
@@ -226,37 +231,38 @@ export class FabricjsEditorComponent implements AfterViewInit {
         break;
     }
     this.extend(add, this.randomId());
-    this.canvas.add(add);
+    this.canvas?.add(add);
     this.selectItemAfterAdded(add);
   }
 
-  changeFigureColor(color) {
-    this.canvas.getActiveObject().set("fill", color);
-    this.canvas.renderAll();
+  changeFigureColor(color: any) {
+    this.canvas?.getActiveObject()?.set("fill", color);
+    this.canvas?.renderAll();
   };
 
   /*Canvas*/
 
   cleanSelect() {
-    this.canvas.discardActiveObject().renderAll();
+    this.canvas?.discardActiveObject().renderAll();
   }
 
-  selectItemAfterAdded(obj) {
-    this.canvas.discardActiveObject().renderAll();
-    this.canvas.setActiveObject(obj);
+  selectItemAfterAdded(obj: any) {
+    this.canvas?.discardActiveObject().renderAll();
+    this.canvas?.setActiveObject(obj);
   }
 
   setCanvasFill() {
-    if (!this.props.canvasImage) {
+    if (this.canvas && !this.props.canvasImage) {
       this.canvas.backgroundColor = this.props.canvasFill;
       this.canvas.renderAll();
     }
   }
 
-  extend(obj, id) {
+  extend(obj: any, id: any) {
     obj.toObject = ((toObject) => {
+      const questo = this;
       return function () {
-        return fabric.util.object.extend(toObject.call(this), {
+        return fabric.util.object.extend(toObject.call(questo), {
           id
         });
       };
@@ -265,10 +271,10 @@ export class FabricjsEditorComponent implements AfterViewInit {
 
   setCanvasImage() {
     const self = this;
-    if (this.props.canvasImage) {
+    if (this.canvas && this.props.canvasImage) {
       this.canvas.setBackgroundColor(new fabric.Pattern({ source: this.props.canvasImage, repeat: 'repeat' }), () => {
         self.props.canvasFill = '';
-        self.canvas.renderAll();
+        self.canvas?.renderAll();
       });
     }
   }
@@ -279,8 +285,8 @@ export class FabricjsEditorComponent implements AfterViewInit {
 
   /*------------------------Global actions for element------------------------*/
 
-  getActiveStyle(styleName, object) {
-    object = object || this.canvas.getActiveObject();
+  getActiveStyle(styleName: any, object: any) {
+    object = object || this.canvas?.getActiveObject();
     if (!object) { return ''; }
 
     if (object.getSelectionStyles && object.isEditing) {
@@ -290,12 +296,12 @@ export class FabricjsEditorComponent implements AfterViewInit {
     }
   }
 
-  setActiveStyle(styleName, value: string | number, object: fabric.IText) {
-    object = object || this.canvas.getActiveObject() as fabric.IText;
+  setActiveStyle(styleName: any, value: string | number, object: fabric.IText | null) {
+    object = object || this.canvas?.getActiveObject() as fabric.IText;
     if (!object) { return; }
 
     if (object.setSelectionStyles && object.isEditing) {
-      const style = {};
+      const style: any = {};
       style[styleName] = value;
 
       if (typeof value === 'string') {
@@ -346,27 +352,27 @@ export class FabricjsEditorComponent implements AfterViewInit {
     }
 
     object.setCoords();
-    this.canvas.renderAll();
+    this.canvas?.renderAll();
   }
 
 
-  getActiveProp(name) {
-    const object = this.canvas.getActiveObject();
+  getActiveProp(name: string) {
+    const object: any = this.canvas?.getActiveObject();
     if (!object) { return ''; }
 
     return object[name] || '';
   }
 
-  setActiveProp(name, value) {
-    const object = this.canvas.getActiveObject();
+  setActiveProp(name: any, value: any) {
+    const object = this.canvas?.getActiveObject();
     if (!object) { return; }
     object.set(name, value).setCoords();
-    this.canvas.renderAll();
+    this.canvas?.renderAll();
   }
 
   clone() {
-    const activeObject = this.canvas.getActiveObject();
-    const activeGroup = this.canvas.getActiveObjects();
+    const activeObject = this.canvas?.getActiveObject();
+    const activeGroup = this.canvas?.getActiveObjects();
 
     if (activeObject) {
       let clone;
@@ -389,28 +395,32 @@ export class FabricjsEditorComponent implements AfterViewInit {
       }
       if (clone) {
         clone.set({ left: 10, top: 10 });
-        this.canvas.add(clone);
+        this.canvas?.add(clone);
         this.selectItemAfterAdded(clone);
       }
     }
   }
 
   getId() {
-    this.props.id = this.canvas.getActiveObject().toObject().id;
+    this.props.id = this.canvas?.getActiveObject()?.toObject().id;
   }
 
   setId() {
-    const val = this.props.id;
-    const complete = this.canvas.getActiveObject().toObject();
-    console.log(complete);
-    this.canvas.getActiveObject().toObject = () => {
-      complete.id = val;
-      return complete;
-    };
+    if (this.canvas) {
+      const val = this.props.id;
+      const complete = this.canvas.getActiveObject()?.toObject();
+      console.log(complete);
+      const newLocal = this.canvas.getActiveObject();
+      if (newLocal)
+        newLocal.toObject = () => {
+          complete.id = val;
+          return complete;
+        };
+    }
   }
 
   getOpacity() {
-    this.props.opacity = this.getActiveStyle('opacity', null) * 100;
+    this.props.opacity = Number(this.getActiveStyle('opacity', null) * 100);
   }
 
   setOpacity() {
@@ -471,7 +481,7 @@ export class FabricjsEditorComponent implements AfterViewInit {
     this.props.TextDecoration = this.getActiveStyle('textDecoration', null);
   }
 
-  setTextDecoration(value) {
+  setTextDecoration(value: any) {
     let iclass = this.props.TextDecoration;
     if (iclass.includes(value)) {
       iclass = iclass.replace(RegExp(value, 'g'), '');
@@ -482,7 +492,7 @@ export class FabricjsEditorComponent implements AfterViewInit {
     this.setActiveStyle('textDecoration', this.props.TextDecoration, null);
   }
 
-  hasTextDecoration(value) {
+  hasTextDecoration(value: any) {
     return this.props.TextDecoration.includes(value);
   }
 
@@ -490,7 +500,7 @@ export class FabricjsEditorComponent implements AfterViewInit {
     this.props.textAlign = this.getActiveProp('textAlign');
   }
 
-  setTextAlign(value) {
+  setTextAlign(value: any) {
     this.props.textAlign = value;
     this.setActiveProp('textAlign', this.props.textAlign);
   }
@@ -507,46 +517,48 @@ export class FabricjsEditorComponent implements AfterViewInit {
 
 
   removeSelected() {
-    const activeObject: any = this.canvas.getActiveObject();
-    const activeGroup: any = this.canvas.getActiveObjects();
+    if (this.canvas) {
+      const activeObject: any = this.canvas.getActiveObject();
+      const activeGroup: any = this.canvas.getActiveObjects();
 
-    if (activeGroup) {
-      this.canvas.discardActiveObject();
-      const self = this;
-      activeGroup.forEach((object) => {
-        self.canvas.remove(object);
-      });
-    } else if (activeObject) {
-      this.canvas.remove(activeObject);
+      if (activeGroup) {
+        this.canvas.discardActiveObject();
+        const self = this;
+        activeGroup.forEach((object: any) => {
+          self.canvas?.remove(object);
+        });
+      } else if (activeObject) {
+        this.canvas.remove(activeObject);
+      }
     }
   }
 
   bringToFront() {
-    const activeObject = this.canvas.getActiveObject();
-    const activeGroup = this.canvas.getActiveObjects();
+    const activeObject = this.canvas?.getActiveObject();
+    const activeGroup = this.canvas?.getActiveObjects();
 
     if (activeObject) {
       activeObject.bringToFront();
       activeObject.opacity = 1;
     } else if (activeGroup) {
-      this.canvas.discardActiveObject();
-      activeGroup.forEach((object) => {
+      this.canvas?.discardActiveObject();
+      activeGroup.forEach((object: any) => {
         object.bringToFront();
       });
     }
   }
 
   sendToBack() {
-    const activeObject = this.canvas.getActiveObject();
-    const activeGroup = this.canvas.getActiveObjects();
+    const activeObject = this.canvas?.getActiveObject();
+    const activeGroup = this.canvas?.getActiveObjects();
 
     if (activeObject) {
-      this.canvas.sendToBack(activeObject);
+      this.canvas?.sendToBack(activeObject);
       activeObject.sendToBack();
       activeObject.opacity = 1;
     } else if (activeGroup) {
-      this.canvas.discardActiveObject();
-      activeGroup.forEach((object) => {
+      this.canvas?.discardActiveObject();
+      activeGroup.forEach((object: any) => {
         object.sendToBack();
       });
     }
@@ -554,43 +566,55 @@ export class FabricjsEditorComponent implements AfterViewInit {
 
   confirmClear() {
     if (confirm('Are you sure?')) {
-      this.canvas.clear();
+      this.canvas?.clear();
     }
   }
 
   rasterize() {
     const image = new Image();
-    image.src = this.canvas.toDataURL({ format: 'png' });
-    const w = window.open('');
-    w.document.write(image.outerHTML);
-    this.downLoadImage();
+    const src = this.canvas?.toDataURL({ format: 'png' });
+    if (src) {
+      image.src = src
+      const w: Window | null = window.open('');
+      if (w) {
+        w.document.write(image.outerHTML);
+        this.downLoadImage();
+      }
+    }
   }
 
   downLoadImage() {
-    const c = this.canvas.toDataURL({ format: 'png' });
-    const downloadLink = document.createElement('a');
-    document.body.appendChild(downloadLink);
-    downloadLink.href = c;
-    downloadLink.target = '_self';
-    downloadLink.download = Date.now() + '.png';
-    downloadLink.click();
+    const c = this.canvas?.toDataURL({ format: 'png' });
+    if (c) {
+      const downloadLink = document.createElement('a');
+      document.body.appendChild(downloadLink);
+      downloadLink.href = c;
+      downloadLink.target = '_self';
+      downloadLink.download = Date.now() + '.png';
+      downloadLink.click();
+    }
   }
 
   rasterizeSVG() {
     const w = window.open('');
-    w.document.write(this.canvas.toSVG());
-    this.downLoadSVG();
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(this.canvas.toSVG());
+    if (w && this.canvas) {
+      w.document.write(this.canvas.toSVG());
+      this.downLoadSVG();
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(this.canvas.toSVG());
+    }
+    return ""
   }
 
   downLoadSVG() {
-    const c = 'data:image/svg+xml;utf8,' + encodeURIComponent(this.canvas.toSVG());
-    const downloadLink = document.createElement('a');
-    document.body.appendChild(downloadLink);
-    downloadLink.href = c;
-    downloadLink.target = '_self';
-    downloadLink.download = Date.now() + '.svg';
-    downloadLink.click();
+    if (this.canvas) {
+      const c = 'data:image/svg+xml;utf8,' + encodeURIComponent(this.canvas.toSVG());
+      const downloadLink = document.createElement('a');
+      document.body.appendChild(downloadLink);
+      downloadLink.href = c;
+      downloadLink.target = '_self';
+      downloadLink.download = Date.now() + '.svg';
+      downloadLink.click();
+    }
   }
 
   saveCanvasToJSON() {
@@ -607,12 +631,12 @@ export class FabricjsEditorComponent implements AfterViewInit {
     console.log(CANVAS);
 
     // and load everything from the same json
-    this.canvas.loadFromJSON(CANVAS, () => {
+    this.canvas?.loadFromJSON(CANVAS, () => {
       console.log('CANVAS untar');
       console.log(CANVAS);
 
       // making sure to render canvas at the end
-      this.canvas.renderAll();
+      this.canvas?.renderAll();
 
       // and checking if object's "name" is preserved
       console.log('this.canvas.item(0).name');
@@ -632,7 +656,9 @@ export class FabricjsEditorComponent implements AfterViewInit {
   }
 
   drawingMode() {
-    this.canvas.isDrawingMode = !this.canvas.isDrawingMode;
+    if (this.canvas) {
+      this.canvas.isDrawingMode = !this.canvas.isDrawingMode;
+    }
   }
 
 }
