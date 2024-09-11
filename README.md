@@ -5,10 +5,10 @@ Now the editor it's part of the application.
 It works well, but I've did few tests.
 It runs local, that's all.
 ## To get it:
-Clone the repo, get the prompt to the folder.
-npm install
-ng serve
-Open http://localhost:4200
+* Clone the repo, get the prompt to the folder.
+* npm install
+* ng serve
+* Open http://localhost:4200
 
 
 # angular-editor-fabric-js
