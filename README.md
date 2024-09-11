@@ -5,13 +5,18 @@ Now the editor it's part of the application.
 It works well, but I've did few tests.
 It runs local, that's all.
 ## To get it:
-* Clone the repo, get the prompt to the folder.
-* npm install
-* ng serve
+* Clone the repo, get the prompt to the folder, run it.
+```bash
+ git clone https://github.com/zernolo/angular-editor-fabric-js.git
+ cd angular-editor-fabric-js
+ npm install
+ ng serve
+``` 
 * Open http://localhost:4200
 
+* build and test does not work, feel free to fix them.
 
-# angular-editor-fabric-js
+# previuos readme from angular-editor-fabric-js
 
 > Drag-and-drop editor based on Fabricjs for Angular with multiple options
 
