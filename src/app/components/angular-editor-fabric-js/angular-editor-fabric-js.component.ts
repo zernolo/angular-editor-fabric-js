@@ -7,7 +7,7 @@ import { fabric } from 'fabric';
   imports: [CommonModule],
   selector: 'angular-editor-fabric-js',
   templateUrl: './angular-editor-fabric-js.component.html',
-  styleUrls: ['./angular-editor-fabric-js.component.css'],
+  styleUrls: ['./angular-editor-fabric-js.component.scss'],
 })
 export class FabricjsEditorComponent implements AfterViewInit {
   @ViewChild('htmlCanvas') htmlCanvas?: ElementRef;
@@ -103,6 +103,7 @@ export class FabricjsEditorComponent implements AfterViewInit {
   private handleObjectSelectionEvent(e: fabric.Object[]) {
     if (Array.isArray(e) && e.length > 0) {
       this.selected = e[0];
+      this.canvas?.setActiveObject(this.selected)
     } else {
       this.selected = undefined
     }
@@ -579,6 +580,7 @@ export class FabricjsEditorComponent implements AfterViewInit {
     const activeObject = this.canvas?.getActiveObject();
     const activeGroup = this.canvas?.getActiveObjects();
 
+    console.log("sendToBack", {activeGroup, activeObject})
     if (activeObject) {
       this.canvas?.sendToBack(activeObject);
       activeObject.sendToBack();
